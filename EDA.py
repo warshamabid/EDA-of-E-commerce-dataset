@@ -1,5 +1,5 @@
-# ecommerce_dashboard.py
-# Streamlit App: Full E-Commerce EDA Dashboard (All-in-One Page)
+# ecommerce_app.py
+# Streamlit App: Professional Single-Page E-commerce EDA Dashboard
 
 import streamlit as st
 import pandas as pd
@@ -11,7 +11,20 @@ import io
 # ------------------------------
 # Page Configuration
 # ------------------------------
-st.set_page_config(page_title="E-commerce EDA Dashboard", layout="wide")
+st.set_page_config(
+    page_title="E-commerce EDA Dashboard",
+    layout="wide",
+    page_icon="🛍️"
+)
+
+st.title("🛍️ E-commerce Data Analysis Dashboard")
+st.markdown("### Explore sales, revenue, and customer trends interactively with Plotly visualizations.")
+
+# ------------------------------
+# Sidebar
+# ------------------------------
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2331/2331970.png", width=100)
+st.sidebar.title("📊 Dashboard Controls")
 
 # ------------------------------
 # Load Data
@@ -24,167 +37,124 @@ def load_data():
 df = load_data()
 
 # ------------------------------
-# Sidebar
-# ------------------------------
-st.sidebar.title("🛍️ E-commerce Dashboard")
-st.sidebar.markdown("Analyze your sales, categories, and customers in one place.")
-st.sidebar.markdown("---")
-st.sidebar.info("Developed with ❤️ using Streamlit & Plotly")
-
-# ------------------------------
-# Title
-# ------------------------------
-st.title("📊 E-Commerce Exploratory Data Analysis Dashboard")
-st.markdown("### Interactive Insights of Sales, Categories, Regions, and Payment Trends")
-
-# ------------------------------
 # Dataset Overview
 # ------------------------------
 st.header("📑 Dataset Overview")
-st.dataframe(df.head(), use_container_width=True)
+st.dataframe(df.head())
 
+# Dataset Info
+st.subheader("ℹ️ Dataset Information")
 buffer = io.StringIO()
 df.info(buf=buffer)
-info_str = buffer.getvalue()
-st.text(info_str)
+st.text(buffer.getvalue())
 
-# ------------------------------
 # Missing Values
-# ------------------------------
-st.header("🚨 Missing Values")
-missing = df.isnull().sum().reset_index()
-missing.columns = ["Column", "Missing Values"]
-fig_missing = px.bar(
-    missing, 
-    x="Column", 
-    y="Missing Values", 
-    title="Missing Values per Column",
-    color="Missing Values", 
-    color_continuous_scale="Reds"
-)
-st.plotly_chart(fig_missing, use_container_width=True)
+st.subheader("❌ Missing Values")
+st.write(df.isnull().sum())
 
 # ------------------------------
-# Descriptive Statistics
+# Key Statistics
 # ------------------------------
-st.header("📈 Descriptive Statistics")
-st.dataframe(df.describe().T, use_container_width=True)
+st.header("📈 Key Statistics")
+st.dataframe(df.describe())
 
 # ------------------------------
-# Correlation Heatmap
-# ------------------------------
-st.header("🔗 Correlation Analysis")
-corr = df.corr(numeric_only=True)
-fig_corr = px.imshow(
-    corr, 
-    text_auto=True, 
-    color_continuous_scale="Viridis",
-    title="Correlation Heatmap"
-)
-st.plotly_chart(fig_corr, use_container_width=True)
-
-# ------------------------------
-# Category Analysis
-# ------------------------------
-st.header("📦 Category Analysis")
-
-# Orders by Category
-category_counts = df["category"].value_counts().reset_index()
-category_counts.columns = ["Category", "Orders"]
-fig_cat_orders = px.bar(
-    category_counts, 
-    x="Category", 
-    y="Orders",
-    color="Category",
-    title="Orders by Category",
-    color_discrete_sequence=px.colors.qualitative.Vivid
-)
-st.plotly_chart(fig_cat_orders, use_container_width=True)
-
 # Revenue by Category
-cat_revenue = df.groupby("category")["price"].sum().reset_index()
-fig_cat_revenue = px.bar(
-    cat_revenue, 
-    x="category", 
-    y="price", 
-    color="category", 
-    title="Revenue by Category",
-    color_discrete_sequence=px.colors.qualitative.Set2
+# ------------------------------
+st.header("💸 Revenue by Category")
+
+cat_revenue = df.groupby("category")["price"].sum().reset_index().sort_values("price", ascending=False)
+
+fig_cat = px.bar(
+    cat_revenue,
+    x="category",
+    y="price",
+    color="category",
+    text_auto=".2s",
+    title="Total Revenue by Product Category",
+    color_discrete_sequence=px.colors.qualitative.Bold
 )
-st.plotly_chart(fig_cat_revenue, use_container_width=True)
+fig_cat.update_traces(textfont_size=12)
+st.plotly_chart(fig_cat, use_container_width=True)
 
 # ------------------------------
-# Region Analysis
+# Orders by Category
 # ------------------------------
-st.header("🌍 Regional Analysis")
-
-region_orders = df["region"].value_counts().reset_index()
-region_orders.columns = ["Region", "Orders"]
-fig_region_orders = px.bar(
-    region_orders, 
-    x="Region", 
-    y="Orders", 
-    color="Region", 
-    title="Orders by Region",
-    color_discrete_sequence=px.colors.qualitative.Plotly
+st.header("📦 Orders by Category")
+fig_orders = px.histogram(
+    df,
+    x="category",
+    color="category",
+    title="Number of Orders by Category",
+    color_discrete_sequence=px.colors.qualitative.Safe
 )
-st.plotly_chart(fig_region_orders, use_container_width=True)
+st.plotly_chart(fig_orders, use_container_width=True)
 
+# ------------------------------
+# Revenue by Region (Map)
+# ------------------------------
+st.header("🌍 Revenue by Region (Interactive Map)")
 region_revenue = df.groupby("region")["price"].sum().reset_index()
-fig_region_revenue = px.choropleth(
-    region_revenue, 
-    locations="region", 
-    locationmode="country names", 
-    color="price", 
-    title="Revenue Distribution by Region",
-    color_continuous_scale="Blues"
+
+fig_map = px.choropleth(
+    region_revenue,
+    locations="region",
+    locationmode="country names",
+    color="price",
+    hover_name="region",
+    color_continuous_scale="Rainbow",
+    title="Global Revenue Distribution by Region"
 )
-st.plotly_chart(fig_region_revenue, use_container_width=True)
+st.plotly_chart(fig_map, use_container_width=True)
 
 # ------------------------------
 # Payment Method Insights
 # ------------------------------
 st.header("💳 Payment Method Insights")
+payment_data = df["payment_method"].value_counts().reset_index()
+payment_data.columns = ["Payment Method", "Count"]
 
-fig_payment = px.pie(
-    df, 
-    names="payment_method", 
-    title="Payment Method Distribution", 
+fig_pay = px.pie(
+    payment_data,
+    names="Payment Method",
+    values="Count",
+    title="Payment Method Distribution",
+    hole=0.3,
     color_discrete_sequence=px.colors.qualitative.Pastel
 )
-st.plotly_chart(fig_payment, use_container_width=True)
+st.plotly_chart(fig_pay, use_container_width=True)
 
 # ------------------------------
-# Advanced Visualizations
+# Price Distribution
 # ------------------------------
-st.header("⚡ Advanced Visualizations")
-
-fig_violin = px.violin(
-    df, 
-    x="category", 
-    y="price", 
-    box=True, 
-    points="all", 
+st.header("💰 Price Distribution")
+fig_price = px.violin(
+    df,
+    x="category",
+    y="price",
+    box=True,
+    points="all",
     color="category",
     title="Price Distribution by Category",
-    color_discrete_sequence=px.colors.qualitative.Bold
+    color_discrete_sequence=px.colors.qualitative.Prism
 )
-st.plotly_chart(fig_violin, use_container_width=True)
+st.plotly_chart(fig_price, use_container_width=True)
 
-# Revenue by Region (Interactive)
-region_revenue = df.groupby("region")["price"].sum().reset_index()
-fig_bar = px.bar(
-    region_revenue, 
-    x="region", 
-    y="price", 
-    color="region", 
-    title="Total Revenue by Region",
-    color_discrete_sequence=px.colors.qualitative.Dark2
+# ------------------------------
+# Correlation Heatmap
+# ------------------------------
+st.header("📊 Correlation Heatmap")
+corr = df.corr(numeric_only=True)
+fig_heat = px.imshow(
+    corr,
+    text_auto=True,
+    color_continuous_scale="Tealrose",
+    title="Correlation Matrix of Numeric Variables"
 )
-st.plotly_chart(fig_bar, use_container_width=True)
+st.plotly_chart(fig_heat, use_container_width=True)
 
 # ------------------------------
 # Footer
 # ------------------------------
 st.markdown("---")
-st.markdown("### 💡 *Dashboard built for interactive EDA of E-commerce data.*")
+st.markdown("✅ **Developed with ❤️ by WARSHAM** | Interactive E-commerce Insights Dashboard using Streamlit + Plotly")
