@@ -7,7 +7,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+import io  # ✅ added for df.info() fix
 
+# ------------------------------
+# Page Configuration
+# ------------------------------
 st.set_page_config(page_title="E-commerce EDA Dashboard", layout="wide")
 
 # ------------------------------
@@ -48,9 +52,9 @@ if page == "Dataset Overview":
     st.dataframe(df.head())
 
     st.subheader("Dataset Info")
-    buffer = []
+    buffer = io.StringIO()
     df.info(buf=buffer)
-    info_str = "\n".join(buffer)
+    info_str = buffer.getvalue()
     st.text(info_str)
 
     st.subheader("Missing Values")
