@@ -1,5 +1,5 @@
 # ecommerce_app.py
-# Streamlit App: Professional Single-Page E-commerce EDA Dashboard
+# Streamlit App: Professional & Colorful Single-Page E-commerce EDA Dashboard
 
 import streamlit as st
 import pandas as pd
@@ -14,17 +14,16 @@ import io
 st.set_page_config(
     page_title="E-commerce EDA Dashboard",
     layout="wide",
-    page_icon="🛍️"
+    page_icon="🛍️",
+    initial_sidebar_state="expanded"
 )
-
-st.title("🛍️ E-commerce Data Analysis Dashboard")
-st.markdown("### Explore sales, revenue, and customer trends interactively with Plotly visualizations.")
 
 # ------------------------------
 # Sidebar
 # ------------------------------
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2331/2331970.png", width=100)
-st.sidebar.title("📊 Dashboard Controls")
+st.sidebar.title("📊 E-commerce Dashboard")
+st.sidebar.markdown("Explore interactive visualizations below 👇")
 
 # ------------------------------
 # Load Data
@@ -37,34 +36,46 @@ def load_data():
 df = load_data()
 
 # ------------------------------
+# Dashboard Title
+# ------------------------------
+st.markdown(
+    "<h1 style='text-align:center; color:#FF6B35;'>🛒 E-commerce Data Analysis Dashboard</h1>",
+    unsafe_allow_html=True
+)
+st.markdown("<hr style='border:2px solid #FF6B35;'>", unsafe_allow_html=True)
+
+# ------------------------------
+# KPIs Section
+# ------------------------------
+st.subheader("📌 Key Performance Indicators")
+
+total_revenue = df["price"].sum()
+total_orders = len(df)
+avg_price = df["price"].mean()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("💰 Total Revenue", f"${total_revenue:,.0f}")
+col2.metric("📦 Total Orders", f"{total_orders:,}")
+col3.metric("🏷️ Average Price", f"${avg_price:,.2f}")
+
+# ------------------------------
 # Dataset Overview
 # ------------------------------
 st.header("📑 Dataset Overview")
 st.dataframe(df.head())
 
-# Dataset Info
-st.subheader("ℹ️ Dataset Information")
 buffer = io.StringIO()
 df.info(buf=buffer)
 st.text(buffer.getvalue())
 
-# Missing Values
 st.subheader("❌ Missing Values")
 st.write(df.isnull().sum())
-
-# ------------------------------
-# Key Statistics
-# ------------------------------
-st.header("📈 Key Statistics")
-st.dataframe(df.describe())
 
 # ------------------------------
 # Revenue by Category
 # ------------------------------
 st.header("💸 Revenue by Category")
-
 cat_revenue = df.groupby("category")["price"].sum().reset_index().sort_values("price", ascending=False)
-
 fig_cat = px.bar(
     cat_revenue,
     x="category",
@@ -72,9 +83,9 @@ fig_cat = px.bar(
     color="category",
     text_auto=".2s",
     title="Total Revenue by Product Category",
-    color_discrete_sequence=px.colors.qualitative.Bold
+    color_discrete_sequence=px.colors.qualitative.Vivid
 )
-fig_cat.update_traces(textfont_size=12)
+fig_cat.update_layout(plot_bgcolor="#FFF", paper_bgcolor="#FFF", title_font_color="#FF6B35")
 st.plotly_chart(fig_cat, use_container_width=True)
 
 # ------------------------------
@@ -86,8 +97,9 @@ fig_orders = px.histogram(
     x="category",
     color="category",
     title="Number of Orders by Category",
-    color_discrete_sequence=px.colors.qualitative.Safe
+    color_discrete_sequence=px.colors.qualitative.Pastel2
 )
+fig_orders.update_layout(plot_bgcolor="#FFF", paper_bgcolor="#FFF", title_font_color="#FF6B35")
 st.plotly_chart(fig_orders, use_container_width=True)
 
 # ------------------------------
@@ -102,8 +114,13 @@ fig_map = px.choropleth(
     locationmode="country names",
     color="price",
     hover_name="region",
-    color_continuous_scale="Rainbow",
+    color_continuous_scale="Turbo",  # 🔥 More vibrant scale
     title="Global Revenue Distribution by Region"
+)
+fig_map.update_layout(
+    geo_bgcolor="#EAF6FF",
+    paper_bgcolor="#FFF",
+    title_font_color="#FF6B35"
 )
 st.plotly_chart(fig_map, use_container_width=True)
 
@@ -119,15 +136,16 @@ fig_pay = px.pie(
     names="Payment Method",
     values="Count",
     title="Payment Method Distribution",
-    hole=0.3,
-    color_discrete_sequence=px.colors.qualitative.Pastel
+    hole=0.35,
+    color_discrete_sequence=px.colors.qualitative.Bold
 )
+fig_pay.update_layout(paper_bgcolor="#FFF", title_font_color="#FF6B35")
 st.plotly_chart(fig_pay, use_container_width=True)
 
 # ------------------------------
-# Price Distribution
+# Price Distribution by Category
 # ------------------------------
-st.header("💰 Price Distribution")
+st.header("💰 Price Distribution by Category")
 fig_price = px.violin(
     df,
     x="category",
@@ -136,8 +154,9 @@ fig_price = px.violin(
     points="all",
     color="category",
     title="Price Distribution by Category",
-    color_discrete_sequence=px.colors.qualitative.Prism
+    color_discrete_sequence=px.colors.qualitative.Dark24
 )
+fig_price.update_layout(paper_bgcolor="#FFF", plot_bgcolor="#FFF", title_font_color="#FF6B35")
 st.plotly_chart(fig_price, use_container_width=True)
 
 # ------------------------------
@@ -148,13 +167,14 @@ corr = df.corr(numeric_only=True)
 fig_heat = px.imshow(
     corr,
     text_auto=True,
-    color_continuous_scale="Tealrose",
+    color_continuous_scale="Plasma",  # bright gradient
     title="Correlation Matrix of Numeric Variables"
 )
+fig_heat.update_layout(paper_bgcolor="#FFF", plot_bgcolor="#FFF", title_font_color="#FF6B35")
 st.plotly_chart(fig_heat, use_container_width=True)
 
 # ------------------------------
 # Footer
 # ------------------------------
-st.markdown("---")
-st.markdown("✅ **Developed with ❤️ by WARSHAM** | Interactive E-commerce Insights Dashboard using Streamlit + Plotly")
+st.markdown("<hr style='border:2px solid #FF6B35;'>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:gray;'>Developed with ❤️ by <b>WARSHAM ABID</b> | Powered by Streamlit + Plotly</p>", unsafe_allow_html=True)
